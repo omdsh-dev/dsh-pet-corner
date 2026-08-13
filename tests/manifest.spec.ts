@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 const root = new URL('../', import.meta.url)
 const readText = (path: string): Promise<string> => readFile(new URL(path, root), 'utf8')
 
-describe('DSH rc.2 package contract', () => {
+describe('DSH rc.3 package contract', () => {
   it('is a Profile Bundle with one host row and an accurately ordered web client', async () => {
     const manifest = JSON.parse(await readText('package.json')) as {
       version: string
@@ -12,7 +12,7 @@ describe('DSH rc.2 package contract', () => {
       peerDependencies: Record<string, string>
     }
     const patch = await readText('cordis.patch.yml')
-    expect(manifest.version).toBe('0.0.1-rc.2')
+    expect(manifest.version).toBe('0.0.1-rc.3')
     expect(manifest.dsh.bundle.patch).toBe('./cordis.patch.yml')
     expect(manifest.dsh.client.platform).toBe('web')
     expect(manifest.dsh.client.inject).toEqual([
@@ -22,8 +22,8 @@ describe('DSH rc.2 package contract', () => {
       '@deepseek-ai/dsh-client-ui-slots',
     ])
     expect((patch.match(/id: pet-corner/g) ?? [])).toHaveLength(1)
-    expect(manifest.peerDependencies['@deepseek-ai/dsh-settings']).toBe('>=0.0.1-rc.2 <0.0.2')
-    expect(manifest.peerDependencies['@deepseek-ai/dsh-host-webserver']).toBe('>=0.0.1-rc.2 <0.0.2')
+    expect(manifest.peerDependencies['@deepseek-ai/dsh-settings']).toBe('>=0.1.0-rc.3 <0.2.0')
+    expect(manifest.peerDependencies['@deepseek-ai/dsh-host-webserver']).toBe('>=0.1.0-rc.3 <0.2.0')
   })
 
   it('contains no rc.1 service or generic settings-scope dependency', async () => {
