@@ -1,0 +1,57 @@
+import { readFile } from 'node:fs/promises'
+import { describe, expect, it } from 'vitest'
+
+const root = new URL('../', import.meta.url)
+const readText = (path: string): Promise<string> => readFile(new URL(path, root), 'utf8')
+
+describe('DSH rc.2 package contract', () => {
+  it('is a Profile Bundle with one host row and an accurately ordered web client', async () => {
+    const manifest = JSON.parse(await readText('package.json')) as {
+      version: string
+      dsh: { bundle: { patch: string }; client: { inject: string[]; platform: string } }
+      peerDependencies: Record<string, string>
+    }
+    const patch = await readText('cordis.patch.yml')
+    expect(manifest.version).toBe('0.0.1-rc.2')
+    expect(manifest.dsh.bundle.patch).toBe('./cordis.patch.yml')
+    expect(manifest.dsh.client.platform).toBe('web')
+    expect(manifest.dsh.client.inject).toEqual([
+      '@deepseek-ai/dsh-client-runtime',
+      '@deepseek-ai/dsh-client-locale',
+      '@deepseek-ai/dsh-client-ui-settings',
+      '@deepseek-ai/dsh-client-ui-slots',
+    ])
+    expect((patch.match(/id: pet-corner/g) ?? [])).toHaveLength(1)
+    expect(manifest.peerDependencies['@deepseek-ai/dsh-settings']).toBe('>=0.0.1-rc.2 <0.0.2')
+    expect(manifest.peerDependencies['@deepseek-ai/dsh-host-webserver']).toBe('>=0.0.1-rc.2 <0.0.2')
+  })
+
+  it('contains no rc.1 service or generic settings-scope dependency', async () => {
+    const files = [
+      'src/index.ts', 'src/proxy.ts', 'src/settings-api.ts', 'src/client/index.ts',
+      'src/client/settings-client.ts', 'scripts/setup-dsh-workspace.mjs', 'README.md',
+    ]
+    const text = (await Promise.all(files.map(readText))).join('\n')
+    expect(text).not.toContain('ctx.httpServer')
+    expect(text).not.toContain("'httpServer'")
+    expect(text).not.toContain('settingsScope.bind')
+    expect(text).not.toContain('dsh-client-ui-plugin-config')
+    expect(text).toContain('ctx.webServer.register')
+  })
+
+  it('keeps CSS virtual ids and published maps free of the checkout path', async () => {
+    const build = await readText('scripts/build.mjs')
+    const config = await readText('tsdown.config.ts')
+    expect(build).toContain('sanitizeClient(stagingLib)')
+    expect(build).toContain("root.replaceAll('/', '\\\\')")
+    expect(config).toContain('sourcemap: false')
+    expect(config).toContain('basename(absolute)')
+  })
+
+  it('does not contact pet upstreams merely because the browser plugin mounted', async () => {
+    const apply = await readText('src/client/index.ts')
+    const panel = await readText('src/client/PetPanel.tsx')
+    expect(apply).not.toContain('pool.warm()')
+    expect(panel).toContain('void pool.warm()')
+  })
+})
