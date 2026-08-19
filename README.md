@@ -1,5 +1,7 @@
 # @deepseek-ai/dsh-pet-corner
 
+**Author / Maintainer:** [@Zacklinkk](https://github.com/Zacklinkk)
+
 DSH 的轻量摸鱼角：右下角是一只可拖动的小猫，点击后可浏览猫、狗和狐狸图片、
 猫咪知识与收藏。所有第三方请求都先经过宿主白名单代理，浏览器不会直接访问外站。
 
